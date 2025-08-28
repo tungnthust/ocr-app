@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import FileUploader from '@/components/FileUploader';
-import OCRViewer from '@/components/OCRViewer';
+import UploadFileViewer from '@/components/UploadFileViewer';
 import OCRResultViewer from '@/components/OCRResultViewer';
 import type { Element, OCRResult } from '@/types/ocr';
 
@@ -173,7 +173,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto">
-                  <OCRViewer
+                  <UploadFileViewer
                     result={ocrResult}
                     currentPage={currentPage}
                     setCurrentPage={handleSetCurrentPage}

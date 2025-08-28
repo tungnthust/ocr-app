@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Element, OCRResult, Page } from '@/types/ocr';
 
-interface OCRViewerProps {
+interface UploadFileViewerProps {
   result: OCRResult | null;
   currentPage: number;
   setCurrentPage: (page: number) => void;
@@ -15,13 +15,34 @@ interface OCRViewerProps {
   onPagesChange?: (count: number) => void;
 }
 
-export default function OCRViewer({ result, currentPage, setCurrentPage, pdfUrl, showBoundingBoxes, hoveredElement, onElementHover, onPagesChange = () => {} }: OCRViewerProps) {
+export default function UploadFileViewer({ result, currentPage, setCurrentPage, pdfUrl, showBoundingBoxes, hoveredElement, onElementHover, onPagesChange = () => {} }: UploadFileViewerProps) {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [loadError, setLoadError] = useState<string>('');
   const [imageWidth, setImageWidth] = useState<number | null>(null);
   const [imageHeight, setImageHeight] = useState<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pdfDocRef = useRef<any>(null);
+  const boundingBoxRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+// Add this useEffect to handle clicks
+useEffect(() => {
+    const handleOCRClick = (e: CustomEvent) => {
+      const element = e.detail;
+      const key = `${element.type}-${element.bbox?.join('-')}-${element.content || ''}`;
+      const ref = boundingBoxRefs.current[key];
+
+      if (ref) {
+        ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        ref.classList.add('highlight');
+        setTimeout(() => ref.classList.remove('highlight'), 2000); // Auto-remove highlight
+      }
+    };
+
+    window.addEventListener('elementOCRClick', handleOCRClick as EventListener);
+    return () => {
+      window.removeEventListener('elementOCRClick', handleOCRClick as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -198,28 +219,32 @@ export default function OCRViewer({ result, currentPage, setCurrentPage, pdfUrl,
                           const [x, y, width, height] = element.bbox;
                           const isHovered = hoveredElement === element;
                           boxes.push(
-                              <div
-                                key={`element-${index}`}
-                                className={`absolute transition-all duration-200 mix-blend-multiply ${
-                                  isHovered 
-                                    ? 'border-2 border-blue-500 bg-blue-200 bg-opacity-30' 
-                                    : 'border border-blue-500'
-                                }`}
-                                style={{
-                                  left: x,
-                                  top: y,
-                                  width: width - x,
-                                  height: height - y,
-                                  pointerEvents: 'auto',
-                                  cursor: 'pointer'
-                                }}
-                                onMouseEnter={() => onElementHover(element)}
-                                onMouseLeave={() => onElementHover(null)}
-                                onClick={() => {
-                                  window.dispatchEvent(new CustomEvent('elementClick', { detail: element }));
-                                }}
-                              />
-                            );
+  <div
+    key={`element-${index}`}
+    ref={(el) => {
+      const key = `${element.type}-${element.bbox.join('-')}-${element.content || ''}`;
+      boundingBoxRefs.current[key] = el;
+    }}
+    className={`absolute transition-all duration-200 mix-blend-multiply ${
+      isHovered 
+        ? 'border-2 border-blue-500 bg-blue-200 bg-opacity-30' 
+        : 'border border-blue-500'
+    }`}
+    style={{
+      left: x,
+      top: y,
+      width: width - x,
+      height: height - y,
+      pointerEvents: 'auto',
+      cursor: 'pointer'
+    }}
+    onMouseEnter={() => onElementHover(element)}
+    onMouseLeave={() => onElementHover(null)}
+    onClick={() => {
+      window.dispatchEvent(new CustomEvent('elementClick', { detail: element }));
+    }}
+  />
+);
                         }
 
                         // Handle table cells if they exist

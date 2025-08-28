@@ -11,7 +11,7 @@ interface OCRResultViewerProps {
 export default function OCRResultViewer({ elements, onElementHover, hoveredElement, viewMode = 'markdown' }: OCRResultViewerProps) {
   const elementRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Listen for click events from OCRViewer
+  // Listen for click events from UploadFileViewer
   useEffect(() => {
     const handleClick = (e: CustomEvent) => {
       const element = e.detail;
@@ -110,6 +110,9 @@ export default function OCRResultViewer({ elements, onElementHover, hoveredEleme
           }`}
           onMouseEnter={() => onElementHover(element)}
           onMouseLeave={() => onElementHover(null)}
+          onClick={() => {
+          window.dispatchEvent(new CustomEvent('elementOCRClick', { detail: element }));
+        }}
         >
           {element.content}
         </div>
