@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Element } from '@/types/ocr';
 
 interface OCRResultViewerProps {
@@ -9,6 +9,27 @@ interface OCRResultViewerProps {
 }
 
 export default function OCRResultViewer({ elements, onElementHover, hoveredElement, viewMode = 'markdown' }: OCRResultViewerProps) {
+  const elementRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Listen for click events from OCRViewer
+  useEffect(() => {
+    const handleClick = (e: CustomEvent) => {
+      const element = e.detail;
+      const key = `${element.type}-${element.bbox?.join('-')}-${element.content || ''}`;
+      const ref = elementRefs.current[key];
+
+      if (ref) {
+        ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        ref.classList.add('highlight');
+        setTimeout(() => ref.classList.remove('highlight'), 2000); // Auto-remove highlight
+      }
+    };
+
+    window.addEventListener('elementClick', handleClick as EventListener);
+    return () => {
+      window.removeEventListener('elementClick', handleClick as EventListener);
+    };
+  }, []);
   // Add global event listeners for cell hover events
   useEffect(() => {
     const handleCellHover = (e: CustomEvent) => onElementHover(e.detail);
@@ -77,10 +98,13 @@ export default function OCRResultViewer({ elements, onElementHover, hoveredEleme
   };
 
   const renderElement = (element: Element, index: number) => {
+    const key = `${element.type}-${element.bbox?.join('-')}-${element.content || ''}`;
+
     if (element.type === 'text') {
       return (
         <div
-          key={index}
+          key={key}
+          ref={(el) => (elementRefs.current[key] = el)}
           className={`mb-2 p-2 rounded cursor-pointer transition-colors ${
             hoveredElement === element ? 'bg-blue-50' : 'hover:bg-blue-50/50'
           }`}

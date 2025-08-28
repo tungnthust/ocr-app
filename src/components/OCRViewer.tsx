@@ -198,24 +198,28 @@ export default function OCRViewer({ result, currentPage, setCurrentPage, pdfUrl,
                           const [x, y, width, height] = element.bbox;
                           const isHovered = hoveredElement === element;
                           boxes.push(
-                            <div
-                              key={`element-${index}`}
-                              className={`absolute transition-all duration-200 mix-blend-multiply ${
-                                isHovered 
-                                  ? 'border-2 border-blue-500 bg-blue-200 bg-opacity-30' 
-                                  : 'border border-blue-500'
-                              }`}
-                              style={{
-                                left: x,
-                                top: y,
-                                width: width - x,
-                                height: height - y,
-                                pointerEvents: 'auto'
-                              }}
-                              onMouseEnter={() => onElementHover(element)}
-                              onMouseLeave={() => onElementHover(null)}
-                            />
-                          );
+                              <div
+                                key={`element-${index}`}
+                                className={`absolute transition-all duration-200 mix-blend-multiply ${
+                                  isHovered 
+                                    ? 'border-2 border-blue-500 bg-blue-200 bg-opacity-30' 
+                                    : 'border border-blue-500'
+                                }`}
+                                style={{
+                                  left: x,
+                                  top: y,
+                                  width: width - x,
+                                  height: height - y,
+                                  pointerEvents: 'auto',
+                                  cursor: 'pointer'
+                                }}
+                                onMouseEnter={() => onElementHover(element)}
+                                onMouseLeave={() => onElementHover(null)}
+                                onClick={() => {
+                                  window.dispatchEvent(new CustomEvent('elementClick', { detail: element }));
+                                }}
+                              />
+                            );
                         }
 
                         // Handle table cells if they exist
@@ -227,28 +231,38 @@ export default function OCRViewer({ result, currentPage, setCurrentPage, pdfUrl,
                               hoveredElement.bbox.toString() === cell.bbox.toString();
                             
                             boxes.push(
-                              <div
-                                key={`cell-${index}-${cellIndex}`}
-                                className={`absolute transition-all duration-200 mix-blend-multiply ${
-                                  isHovered 
-                                    ? 'border-2 border-blue-500 bg-blue-200 bg-opacity-30' 
-                                    : 'border border-blue-500'
-                                }`}
-                                style={{
-                                  left: x,
-                                  top: y,
-                                  width: width - x,
-                                  height: height - y,
-                                  pointerEvents: 'auto'
-                                }}
-                                onMouseEnter={() => onElementHover({
-                                  type: 'table-cell',
-                                  bbox: cell.bbox,
-                                  content: cell.content
-                                })}
-                                onMouseLeave={() => onElementHover(null)}
-                              />
-                            );
+                                <div
+                                  key={`cell-${index}-${cellIndex}`}
+                                  className={`absolute transition-all duration-200 mix-blend-multiply ${
+                                    isHovered 
+                                      ? 'border-2 border-blue-500 bg-blue-200 bg-opacity-30' 
+                                      : 'border border-blue-500'
+                                  }`}
+                                  style={{
+                                    left: x,
+                                    top: y,
+                                    width: width - x,
+                                    height: height - y,
+                                    pointerEvents: 'auto',
+                                    cursor: 'pointer'
+                                  }}
+                                  onMouseEnter={() => onElementHover({
+                                    type: 'table-cell',
+                                    bbox: cell.bbox,
+                                    content: cell.content
+                                  })}
+                                  onMouseLeave={() => onElementHover(null)}
+                                  onClick={() => {
+                                    window.dispatchEvent(new CustomEvent('elementClick', {
+                                      detail: {
+                                        type: 'table-cell',
+                                        bbox: cell.bbox,
+                                        content: cell.content
+                                      }
+                                    }));
+                                  }}
+                                />
+                              );
                           });
                         }
                         return boxes;

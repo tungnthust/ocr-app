@@ -68,7 +68,7 @@ export default function Home() {
     formData.append('render_html', 'true');
 
     try {
-      const response = await fetch('http://localhost:8668/extract', {
+      const response = await fetch('http://27.66.108.30:7866/extract', {
         method: 'POST',
         body: formData,
       });
